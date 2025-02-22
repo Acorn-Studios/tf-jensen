@@ -1,6 +1,7 @@
 demos/*
 data_collector/target/
 data_collector/test/*
+data.csv
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
