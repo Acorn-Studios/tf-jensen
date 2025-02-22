@@ -46,9 +46,10 @@ def filter_by_one_player(data: str) -> None:
             writer.writeheader()
             writer.writerows(filtered_rows)
 
-def concatenate_csvs(data_folder: str) -> None:
+def concatenate_csvs(data_folder: str, name='data.csv') -> None:
     csvs = os.listdir(data_folder)
-    with open('data.csv', 'w', newline='', encoding='utf-8') as file:
+    seen_ticks = set()
+    with open(name, 'w', newline='', encoding='utf-8') as file:
         writer = csv.writer(file)
         writer.writerow(['tick', 'name', 'steam_id', 'origin_x', 'origin_y', 'origin_z', 'viewangle', 'pitchangle', 'va_delta', 'pa_delta'])
         for csv_file in csvs:
@@ -56,5 +57,8 @@ def concatenate_csvs(data_folder: str) -> None:
                 reader = csv.reader(f)
                 next(reader)  # Skip header
                 for row in reader:
-                    writer.writerow(row)
+                    tick_name_pair = (row[0], row[1])
+                    if tick_name_pair not in seen_ticks:
+                        seen_ticks.add(tick_name_pair)
+                        writer.writerow(row)
 

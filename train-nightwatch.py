@@ -28,8 +28,12 @@ df = pd.read_csv('data.csv', encoding='utf-8')
 df = df.drop(['tick', 'name', 'steam_id'], axis=1)  # Keep only numerical values
 
 # Handle NaN values in `va_delta` and `pa_delta` (fill with 0 or column mean)
-df['va_delta'].fillna(0, inplace=True)  # Replace NaN with 0
-df['pa_delta'].fillna(0, inplace=True)  # Replace NaN with 0
+df['va_delta'] = df['va_delta'].fillna(0)  # Replace NaN with 0
+df['pa_delta'] = df['pa_delta'].fillna(0)  # Replace NaN with 0
+
+# Ensure the DataFrame is not empty
+if df.empty:
+    raise ValueError("The DataFrame is empty after dropping duplicates.")
 
 # Select only the relevant features for anomaly detection
 features = ['viewangle', 'pitchangle', 'va_delta', 'pa_delta']
@@ -73,6 +77,9 @@ complex_autoencoder.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 
 # Train the Autoencoder
 history = complex_autoencoder.fit(X_train, X_train, epochs=3, batch_size=64, shuffle=True, validation_data=(X_test, X_test))
+
+# Save the model
+complex_autoencoder.save('jensen-nightwatch-v1.keras')
 
 # Plot training & validation loss values
 plt.plot(history.history['loss'])
