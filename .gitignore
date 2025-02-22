@@ -1,5 +1,6 @@
 demos/*
 data_collector/target/
+data_collector/test/*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
