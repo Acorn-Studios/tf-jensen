@@ -19,7 +19,7 @@ for demo in demos:
 datascrape.concatenate_csvs('data_collector/test', name='new_data.csv')
 
 # Load the model
-model = load_model('jensen-nightwatch-v1.keras')
+model = load_model('jensen-nightwatch-v1-s2-highbake.keras')
 
 # Load new data for anomaly detection
 new_df = pd.read_csv('new_data.csv', encoding='utf-8')  # Replace with actual data source

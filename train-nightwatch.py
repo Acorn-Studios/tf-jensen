@@ -13,13 +13,13 @@ import os
 if not os.path.exists('data.csv'):
     # Clear the test folder
     datascrape.clear_folder('data_collector/test')
-    # Turn all demos into CSV files, clean them into only 1 player & concatenate them into one CSV
+    # Turn all demos into CSV files and extract data for all players
     datascrape.comp_all_csv()
     demos = os.listdir('./data_collector/test')
     for demo in demos:
-        print(f"Cleaning/sorting {demo}")
-        datascrape.filter_by_one_player("data_collector/test/"+demo)
-    datascrape.concatenate_csvs('data_collector/test')
+        print(f"Extracting data for all players from {demo}")
+        datascrape.extract_all_players("data_collector/test/"+demo, "playerdata/")
+    datascrape.concatenate_csvs('playerdata/')
 
 # Load the dataset with utf-8 encoding
 df = pd.read_csv('data.csv', encoding='utf-8')
@@ -53,33 +53,35 @@ X_test = test_data[features].values
 print("X_train shape:", X_train.shape)  # Should be (num_samples, 4)
 print("X_test shape:", X_test.shape)  # Should be (num_samples, 4)
 
+size = 4 # Size of the model
+
 # Build the more complex Autoencoder Model
-def build_complex_autoencoder(input_shape):
+def build_complex_autoencoder(input_shape, size=1):
     model = models.Sequential()
     # Encoder layer part
     model.add(layers.InputLayer(input_shape=(input_shape,)))
-    model.add(layers.Dense(256, activation='relu'))
-    model.add(layers.Dense(128, activation='relu'))
-    model.add(layers.Dense(64, activation='relu'))
-    model.add(layers.Dense(32, activation='relu'))  # bottleneck layer
+    model.add(layers.Dense(256*size, activation='relu'))
+    model.add(layers.Dense(128*size, activation='relu'))
+    model.add(layers.Dense(64*size, activation='relu'))
+    model.add(layers.Dense(32*size, activation='relu'))  # bottleneck layer
     # Decoder layer part
-    model.add(layers.Dense(64, activation='relu'))
-    model.add(layers.Dense(128, activation='relu'))
-    model.add(layers.Dense(256, activation='relu'))
+    model.add(layers.Dense(64*size, activation='relu'))
+    model.add(layers.Dense(128*size, activation='relu'))
+    model.add(layers.Dense(256*size, activation='relu'))
     model.add(layers.Dense(input_shape, activation='tanh'))
     return model
 
 input_shape = X_train.shape[1]
-complex_autoencoder = build_complex_autoencoder(input_shape)
+complex_autoencoder = build_complex_autoencoder(input_shape, size=size)
 
 # Compile the Model
 complex_autoencoder.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 
 # Train the Autoencoder
-history = complex_autoencoder.fit(X_train, X_train, epochs=3, batch_size=64, shuffle=True, validation_data=(X_test, X_test))
+history = complex_autoencoder.fit(X_train, X_train, epochs=6, batch_size=32, validation_data=(X_test, X_test))
 
 # Save the model
-complex_autoencoder.save('jensen-nightwatch-v1.keras')
+complex_autoencoder.save(f'jensen-nightwatch-v2-s{size}-highbake.keras')
 
 # Plot training & validation loss values
 plt.plot(history.history['loss'])
