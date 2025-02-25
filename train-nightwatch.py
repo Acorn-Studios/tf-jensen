@@ -22,7 +22,8 @@ if not os.path.exists('data.csv'):
         datascrape.extract_all_players("data_collector/test/"+demo, "playerdata/", concaticate_by_default=True)
 
 # Load the dataset with utf-8 encoding
-df = pd.read_csv('data.csv', encoding='utf-8')
+df = pd.read_csv('data.csv', encoding='utf-8', dtype=str)
+df = df.apply(pd.to_numeric, errors='coerce')
 
 # Drop unnecessary columns
 df = df.drop(['tick', 'name', 'steam_id'], axis=1)  # Keep only numerical values
@@ -74,6 +75,9 @@ def build_complex_autoencoder(input_shape, size=1):
 input_shape = X_train.shape[1]
 complex_autoencoder = build_complex_autoencoder(input_shape, size=size)
 
+# Display the Model Summary
+complex_autoencoder.summary()
+
 # Compile the Model
 complex_autoencoder.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 
@@ -83,35 +87,37 @@ history = complex_autoencoder.fit(X_train, X_train, epochs=6, batch_size=32, val
 # Save the model
 complex_autoencoder.save(f'jensen-nightwatch-v2-s{size}-highbake.keras')
 
-# Plot training & validation loss values
-plt.plot(history.history['loss'])
-plt.plot(history.history['val_loss'])
-plt.title('Model loss')
-plt.ylabel('Loss')
-plt.xlabel('Epoch')
-plt.legend(['Train', 'Validation'], loc='upper right')
-plt.show()
+show_summary = False
+if show_summary:
+    # Plot training & validation loss values
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('Model loss')
+    plt.ylabel('Loss')
+    plt.xlabel('Epoch')
+    plt.legend(['Train', 'Validation'], loc='upper right')
+    plt.show()
 
-# Plot Loss vs. Accuracy
-plt.figure(figsize=(12, 4))
+    # Plot Loss vs. Accuracy
+    plt.figure(figsize=(12, 4))
 
-# Plot Training Loss
-plt.subplot(1, 2, 1)
-plt.plot(history.history['loss'], label='Training Loss')
-plt.plot(history.history['accuracy'], label='Training Accuracy')
-plt.title('Training Loss and Accuracy')
-plt.xlabel('Epochs')
-plt.ylabel('Loss')
-plt.legend()
+    # Plot Training Loss
+    plt.subplot(1, 2, 1)
+    plt.plot(history.history['loss'], label='Training Loss')
+    plt.plot(history.history['accuracy'], label='Training Accuracy')
+    plt.title('Training Loss and Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Loss')
+    plt.legend()
 
-# Plot Training Accuracy
-plt.subplot(1, 2, 2)
-plt.plot(history.history['val_loss'], label='Validation Loss')
-plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
-plt.title('Validation Loss and Accuracy')
-plt.xlabel('Epochs')
-plt.ylabel('Accuracy')
-plt.legend()
+    # Plot Training Accuracy
+    plt.subplot(1, 2, 2)
+    plt.plot(history.history['val_loss'], label='Validation Loss')
+    plt.plot(history.history['val_accuracy'], label='Validation Accuracy')
+    plt.title('Validation Loss and Accuracy')
+    plt.xlabel('Epochs')
+    plt.ylabel('Accuracy')
+    plt.legend()
 
-plt.tight_layout()
-plt.show()
+    plt.tight_layout()
+    plt.show()
