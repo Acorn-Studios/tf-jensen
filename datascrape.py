@@ -1,7 +1,7 @@
 import csv
 import os
 import warnings
-import re
+import uuid
 import base64
 
 # Clean a row by encoding the name
@@ -71,13 +71,22 @@ def concatenate_csvs(data_folder: str, name='data.csv') -> None:
                         writer.writerow(row)
 
 # Extract all the different players into separate csvs. Allows for extraction of up to 12x more data than traditional
-def extract_all_players(data: str, path : str) -> None:
+def extract_all_players(data: str, path : str, concaticate_by_default = False) -> None:
     with open(data, 'r', encoding='utf-8') as file:
         reader = csv.DictReader(file)
         players = set(row.get('name') for row in reader)
         for player in players:
             rows = filter_by_name(data, player)
-            with open(f'{path}{player}.csv', 'w', newline='', encoding='utf-8') as f:
-                writer = csv.DictWriter(f, fieldnames=reader.fieldnames)
-                writer.writeheader()
-                writer.writerows(rows)
+            # Write to signular csvs if concaticate_by_default is False. Else write into one sigular csv
+            if concaticate_by_default:
+                print(f"Writing {player} to data.csv")
+                with open(f'data.csv', 'a', newline='', encoding='utf-8') as f:
+                    writer = csv.DictWriter(f, fieldnames=reader.fieldnames)
+                    writer.writeheader()
+                    writer.writerows(rows)
+            else:
+                print(f"Writing {player} to {path}")
+                with open(f'{path}{uuid.uuid4()}.csv', 'a', newline='', encoding='utf-8') as f:
+                    writer = csv.DictWriter(f, fieldnames=reader.fieldnames)
+                    writer.writeheader()
+                    writer.writerows(rows)

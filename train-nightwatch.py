@@ -11,15 +11,15 @@ import os
 
 # Only gather data if we don't have data.csv
 if not os.path.exists('data.csv'):
-    # Clear the test folder
-    datascrape.clear_folder('data_collector/test')
     # Turn all demos into CSV files and extract data for all players
-    datascrape.comp_all_csv()
+    if not os.listdir('data_collector/test'): 
+        print("Compiling all demos into CSV")
+        datascrape.comp_all_csv()
+    
     demos = os.listdir('./data_collector/test')
     for demo in demos:
         print(f"Extracting data for all players from {demo}")
-        datascrape.extract_all_players("data_collector/test/"+demo, "playerdata/")
-    datascrape.concatenate_csvs('playerdata/')
+        datascrape.extract_all_players("data_collector/test/"+demo, "playerdata/", concaticate_by_default=True)
 
 # Load the dataset with utf-8 encoding
 df = pd.read_csv('data.csv', encoding='utf-8')
