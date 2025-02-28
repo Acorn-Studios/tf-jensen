@@ -82,7 +82,7 @@ complex_autoencoder.summary()
 complex_autoencoder.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 
 # Train the Autoencoder
-history = complex_autoencoder.fit(X_train, X_train, epochs=6, batch_size=32, validation_data=(X_test, X_test))
+history = complex_autoencoder.fit(X_train, X_train, epochs=3, batch_size=32, validation_data=(X_test, X_test))
 
 # Save the model
 complex_autoencoder.save(f'jensen-nightwatch-v2-s{size}-highbake.keras')
