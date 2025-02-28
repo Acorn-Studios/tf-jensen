@@ -3,7 +3,9 @@ import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
-from tensorflow.keras import layers, models
+from tensorflow.keras import layers, models, Sequential
+from tensorflow.keras.layers import LSTM, Dense, InputLayer
+from tensorflow.keras.models import Model
 import matplotlib.pyplot as plt
 
 import datascrape
@@ -47,8 +49,8 @@ df[features] = scaler.fit_transform(df[features])
 train_data, test_data = train_test_split(df, test_size=0.1, random_state=42)
 
 # Extract features (X) for training and testing
-X_train = train_data[features].values  # Only selected features
-X_test = test_data[features].values
+X_train = train_data[features].values.reshape(-1, 1, len(features))  # Reshape to (samples, timesteps, features)
+X_test = test_data[features].values.reshape(-1, 1, len(features))  # Reshape to (samples, timesteps, features)
 
 # Check shape
 print("X_train shape:", X_train.shape)  # Should be (num_samples, 4)
@@ -75,10 +77,10 @@ lstm_autoencoder.summary()
 lstm_autoencoder.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 
 # Train the Autoencoder
-history = complex_autoencoder.fit(X_train, X_train, epochs=3, batch_size=32, validation_data=(X_test, X_test))
+history = lstm_autoencoder.fit(X_train, X_train, epochs=3, batch_size=32, validation_data=(X_test, X_test))
 
 # Save the model
-complex_autoencoder.save(f'jensen-nightwatch-v2-s{size}-lstm.keras')
+lstm_autoencoder.save(f'jensen-nightwatch-v2-s{size}-lstm.keras')
 
 show_summary = False
 if show_summary:
