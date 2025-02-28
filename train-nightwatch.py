@@ -56,36 +56,29 @@ print("X_test shape:", X_test.shape)  # Should be (num_samples, 4)
 
 size = 4 # Size of the model
 
-# Build the more complex Autoencoder Model
-def build_complex_autoencoder(input_shape, size=1):
-    model = models.Sequential()
-    # Encoder layer part
-    model.add(layers.InputLayer(input_shape=(input_shape,)))
-    model.add(layers.Dense(256*size, activation='relu'))
-    model.add(layers.Dense(128*size, activation='relu'))
-    model.add(layers.Dense(64*size, activation='relu'))
-    model.add(layers.Dense(32*size, activation='relu'))  # bottleneck layer
-    # Decoder layer part
-    model.add(layers.Dense(64*size, activation='relu'))
-    model.add(layers.Dense(128*size, activation='relu'))
-    model.add(layers.Dense(256*size, activation='relu'))
-    model.add(layers.Dense(input_shape, activation='tanh'))
+# Build the autoencoder. 
+# Here, we want our model to look at past veiwangles to determine a cheater, so we do that here.
+def build_lstm_autoencoder(input_shape, size=1):
+    model = Sequential()
+    model.add(InputLayer(input_shape=(None, input_shape)))
+    model.add(LSTM(128*size, activation='relu', return_sequences=True))
+    model.add(LSTM(64*size, activation='relu', return_sequences=False))
+    model.add(Dense(32*size, activation='relu'))  # bottleneck
+    model.add(Dense(64*size, activation='relu'))
+    model.add(Dense(128*size, activation='relu'))
+    model.add(Dense(input_shape, activation='tanh'))
     return model
 
 input_shape = X_train.shape[1]
-complex_autoencoder = build_complex_autoencoder(input_shape, size=size)
-
-# Display the Model Summary
-complex_autoencoder.summary()
-
-# Compile the Model
-complex_autoencoder.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
+lstm_autoencoder = build_lstm_autoencoder(input_shape, size=size)
+lstm_autoencoder.summary()
+lstm_autoencoder.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 
 # Train the Autoencoder
 history = complex_autoencoder.fit(X_train, X_train, epochs=3, batch_size=32, validation_data=(X_test, X_test))
 
 # Save the model
-complex_autoencoder.save(f'jensen-nightwatch-v2-s{size}-highbake.keras')
+complex_autoencoder.save(f'jensen-nightwatch-v2-s{size}-lstm.keras')
 
 show_summary = False
 if show_summary:
