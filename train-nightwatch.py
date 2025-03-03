@@ -89,7 +89,7 @@ lstm_autoencoder.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 history = lstm_autoencoder.fit(
 	X_train, X_train, 
 	epochs=8, 
-	batch_size=128^bsize_scale, 
+	batch_size=128*bsize_scale, 
 	validation_data=(X_test, X_test), 
 	callbacks=[ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=lr_rate)],
     verbose=1
