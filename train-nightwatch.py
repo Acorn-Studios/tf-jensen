@@ -11,7 +11,12 @@ import matplotlib.pyplot as plt
 import datascrape
 import os
 
-print(tf.config.list_physical_devices('GPU'))
+# MODEL PARAMS #
+bsize_scale = 2 # The higher this is, the faster training will be, but the model will generalize less
+size = 8 # Size of the model. Size increases model performance, but also increases training time
+
+lr_rate = 0.001 # Learning rate for the model. Do not adjust unless you know what you're doing
+
 
 # Only gather data if we don't have data.csv
 if not os.path.exists('data.csv'):
@@ -23,7 +28,7 @@ if not os.path.exists('data.csv'):
     demos = os.listdir('./data_collector/test')
     for demo in demos:
         print(f"Extracting data for all players from {demo}")
-        datascrape.extract_all_players("data_collector/test/"+demo, "playerdata/", concatenate_by_default=True)
+        datascrape.extract_all_players("data_collector/test/"+demo, "playerdata/", concaticate_by_default=True)
 
 # Load the dataset with utf-8 encoding
 df = pd.read_csv('data.csv', encoding='utf-8', dtype=str)
@@ -35,9 +40,6 @@ df = df.drop(['tick', 'name', 'steam_id'], axis=1)  # Keep only numerical values
 # Handle NaN values in `va_delta` and `pa_delta` (fill with 0 or column mean)
 df['va_delta'] = df['va_delta'].fillna(0)  # Replace NaN with 0
 df['pa_delta'] = df['pa_delta'].fillna(0)  # Replace NaN with 0
-# Find nans and print them
-nans = df.isna().sum()
-print(nans[nans > 0])
 
 # Ensure the DataFrame is not empty
 if df.empty:
@@ -50,6 +52,10 @@ features = ['viewangle', 'pitchangle', 'va_delta', 'pa_delta']
 scaler = StandardScaler()
 df[features] = scaler.fit_transform(df[features])
 
+# Reshape the data for LSTM
+X = df[features].values
+X = X.reshape((X.shape[0], 1, X.shape[1]))
+
 # Split dataset (90% training, 10% testing)
 train_data, test_data = train_test_split(df, test_size=0.1)
 
@@ -61,34 +67,32 @@ X_test = test_data[features].values.reshape(-1, 1, len(features))  # Reshape to 
 print("X_train shape:", X_train.shape)  # Should be (num_samples, 1, 4)
 print("X_test shape:", X_test.shape)  # Should be (num_samples, 1, 4)
 
-size = 8 # Size of the model
-
 # Build the autoencoder. 
 # Here, we want our model to look at past veiwangles to determine a cheater, so we do that here.
 def build_lstm_autoencoder(input_shape, size=1):
     model = Sequential()
     model.add(Input(shape=(input_shape[1], input_shape[2])))
-    model.add(LSTM(128*size, activation='tanh', return_sequences=True))
-    model.add(LSTM(64*size, activation='tanh', return_sequences=False))
+    model.add(LSTM(128*size, activation='relu', return_sequences=True))
+    model.add(LSTM(64*size, activation='relu', return_sequences=False))
     model.add(RepeatVector(input_shape[1]))
-    model.add(LSTM(64*size, activation='tanh', return_sequences=True))
-    model.add(LSTM(128*size, activation='tanh', return_sequences=True))
+    model.add(LSTM(64*size, activation='relu', return_sequences=True))
+    model.add(LSTM(128*size, activation='relu', return_sequences=True))
     model.add(TimeDistributed(Dense(input_shape[2], activation='tanh')))
     return model
 
 input_shape = X_train.shape
 lstm_autoencoder = build_lstm_autoencoder(input_shape, size=size)
 lstm_autoencoder.summary()
-optimizer = tf.keras.optimizers.Adam(learning_rate=0.001, clipnorm=1.0)
-lstm_autoencoder.compile(optimizer=optimizer, loss='mse')
+lstm_autoencoder.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 
 # Train the Autoencoder
 history = lstm_autoencoder.fit(
 	X_train, X_train, 
-	epochs=3, 
-	batch_size=32, 
+	epochs=8, 
+	batch_size=128^bsize_scale, 
 	validation_data=(X_test, X_test), 
-	callbacks=[ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)]
+	callbacks=[ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=lr_rate)],
+    verbose=1
 )
 
 # Save the model
