@@ -23,7 +23,7 @@ if not os.path.exists('data.csv'):
     demos = os.listdir('./data_collector/test')
     for demo in demos:
         print(f"Extracting data for all players from {demo}")
-        datascrape.extract_all_players("data_collector/test/"+demo, "playerdata/", concaticate_by_default=True)
+        datascrape.extract_all_players("data_collector/test/"+demo, "playerdata/", concatenate_by_default=True)
 
 # Load the dataset with utf-8 encoding
 df = pd.read_csv('data.csv', encoding='utf-8', dtype=str)
@@ -51,7 +51,7 @@ scaler = StandardScaler()
 df[features] = scaler.fit_transform(df[features])
 
 # Split dataset (90% training, 10% testing)
-train_data, test_data = train_test_split(df, test_size=0.1, random_state=42)
+train_data, test_data = train_test_split(df, test_size=0.1)
 
 # Extract features (X) for training and testing
 X_train = train_data[features].values.reshape(-1, 1, len(features))  # Reshape to (samples, timesteps, features)
@@ -68,11 +68,11 @@ size = 8 # Size of the model
 def build_lstm_autoencoder(input_shape, size=1):
     model = Sequential()
     model.add(Input(shape=(input_shape[1], input_shape[2])))
-    model.add(LSTM(128*size, return_sequences=True))
-    model.add(LSTM(64*size, return_sequences=False))
+    model.add(LSTM(128*size, activation='tanh', return_sequences=True))
+    model.add(LSTM(64*size, activation='tanh', return_sequences=False))
     model.add(RepeatVector(input_shape[1]))
-    model.add(LSTM(64*size, return_sequences=True))
-    model.add(LSTM(128*size, return_sequences=True))
+    model.add(LSTM(64*size, activation='tanh', return_sequences=True))
+    model.add(LSTM(128*size, activation='tanh', return_sequences=True))
     model.add(TimeDistributed(Dense(input_shape[2], activation='tanh')))
     return model
 
