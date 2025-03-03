@@ -4,7 +4,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
 from tensorflow.keras import layers, models, Sequential
-from tensorflow.keras.layers import LSTM, Dense, InputLayer
+from tensorflow.keras.layers import LSTM, Dense, Input, RepeatVector, TimeDistributed
 from tensorflow.keras.models import Model
 import matplotlib.pyplot as plt
 
@@ -53,25 +53,25 @@ X_train = train_data[features].values.reshape(-1, 1, len(features))  # Reshape t
 X_test = test_data[features].values.reshape(-1, 1, len(features))  # Reshape to (samples, timesteps, features)
 
 # Check shape
-print("X_train shape:", X_train.shape)  # Should be (num_samples, 4)
-print("X_test shape:", X_test.shape)  # Should be (num_samples, 4)
+print("X_train shape:", X_train.shape)  # Should be (num_samples, 1, 4)
+print("X_test shape:", X_test.shape)  # Should be (num_samples, 1, 4)
 
-size = 4 # Size of the model
+size = 8 # Size of the model
 
 # Build the autoencoder. 
 # Here, we want our model to look at past veiwangles to determine a cheater, so we do that here.
 def build_lstm_autoencoder(input_shape, size=1):
     model = Sequential()
-    model.add(InputLayer(input_shape=(None, input_shape)))
+    model.add(Input(shape=(input_shape[1], input_shape[2])))
     model.add(LSTM(128*size, activation='relu', return_sequences=True))
     model.add(LSTM(64*size, activation='relu', return_sequences=False))
-    model.add(Dense(32*size, activation='relu'))  # bottleneck
-    model.add(Dense(64*size, activation='relu'))
-    model.add(Dense(128*size, activation='relu'))
-    model.add(Dense(input_shape, activation='tanh'))
+    model.add(RepeatVector(input_shape[1]))
+    model.add(LSTM(64*size, activation='relu', return_sequences=True))
+    model.add(LSTM(128*size, activation='relu', return_sequences=True))
+    model.add(TimeDistributed(Dense(input_shape[2], activation='tanh')))
     return model
 
-input_shape = X_train.shape[1]
+input_shape = X_train.shape
 lstm_autoencoder = build_lstm_autoencoder(input_shape, size=size)
 lstm_autoencoder.summary()
 lstm_autoencoder.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
