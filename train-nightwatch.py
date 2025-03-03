@@ -5,11 +5,13 @@ from sklearn.preprocessing import StandardScaler
 import tensorflow as tf
 from tensorflow.keras import layers, models, Sequential
 from tensorflow.keras.layers import LSTM, Dense, Input, RepeatVector, TimeDistributed
-from tensorflow.keras.models import Model
+from tensorflow.keras.callbacks import ReduceLROnPlateau
 import matplotlib.pyplot as plt
 
 import datascrape
 import os
+
+print(tf.config.list_physical_devices('GPU'))
 
 # Only gather data if we don't have data.csv
 if not os.path.exists('data.csv'):
@@ -76,8 +78,11 @@ lstm_autoencoder = build_lstm_autoencoder(input_shape, size=size)
 lstm_autoencoder.summary()
 lstm_autoencoder.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 
+# Implement ReduceLROnPlateau callback
+reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=0.001)
+
 # Train the Autoencoder
-history = lstm_autoencoder.fit(X_train, X_train, epochs=3, batch_size=32, validation_data=(X_test, X_test))
+history = lstm_autoencoder.fit(X_train, X_train, epochs=3, batch_size=32, validation_data=(X_test, X_test), callbacks=[reduce_lr])
 
 # Save the model
 lstm_autoencoder.save(f'jensen-nightwatch-v2-s{size}-lstm.keras')
