@@ -58,8 +58,12 @@ Jensen is an AI-powered tool designed to analyze Team Fortress 2 (TF2) demo file
     ```sh
     pip install -r requirements.txt
     ```
+3. **Setup PlaidML**:
+   ```sh
+   plaidml-setup
+   ```
 
-3. **Run the data extraction and model training script**:
+4. **Run the data extraction and model training script**:
     ```sh
     python train-nightwatch.py
     ```
