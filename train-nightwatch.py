@@ -1,15 +1,21 @@
+# Data stuff
+import os
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import datascrape
+
+# I love Sklearn!
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-import tensorflow as tf
-from tensorflow.keras import layers, models, Sequential
-from tensorflow.keras.layers import LSTM, Dense, Input, RepeatVector, TimeDistributed
-from tensorflow.keras.callbacks import ReduceLROnPlateau
-import matplotlib.pyplot as plt
 
-import datascrape
-import os
+# PlaidML
+import plaidml.keras
+plaidml.keras.install_backend()
+
+from keras import layers, models, Sequential
+from keras.layers import LSTM, Dense, Input, RepeatVector, TimeDistributed
+from keras.callbacks import ReduceLROnPlateau
 
 # MODEL PARAMS #
 bsize_scale = 2 # The higher this is, the faster training will be, but the model will generalize less
