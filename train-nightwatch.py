@@ -11,7 +11,11 @@ from sklearn.preprocessing import StandardScaler
 
 # PlaidML
 import plaidml.keras
-plaidml.keras.install_backend()
+try:
+	plaidml.keras.install_backend()
+except:
+	# Backup
+	os.environ['KERAS_BACKEND'] = "plaidml.keras.backend"
 
 from keras import layers, models, Sequential
 from keras.layers import LSTM, Dense, Input, RepeatVector, TimeDistributed
