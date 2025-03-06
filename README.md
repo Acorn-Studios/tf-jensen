@@ -48,6 +48,8 @@ Jensen is an AI-powered tool designed to analyze Team Fortress 2 (TF2) demo file
 
 ## Getting Started
 
+**Note:** `py -3.8` is used here as I assume you have the latest python installed. You NEED python 3.8 for PlaidML. Install it and switch to it in whatever way you like, or keep your version untouched by doing what I'm doing. If python 3.8 is your default, just do `python`
+
 1. **Clone the repository**:
     ```sh
     git clone https://github.com/yourusername/tf-jensen.git
@@ -56,12 +58,16 @@ Jensen is an AI-powered tool designed to analyze Team Fortress 2 (TF2) demo file
 
 2. **Install dependencies**:
     ```sh
-    pip install -r requirements.txt
+    py -3.8 pip install -r requirements.txt
+    ```
+3. **Setup PlaidML**:
+    ```sh
+    plaidml-setup
     ```
 
-3. **Run the data extraction and model training script**:
+4. **Run the data extraction and model training script**:
     ```sh
-    python train-nightwatch.py
+    py -3.8 train-nightwatch.py
     ```
 
 ## Requirements

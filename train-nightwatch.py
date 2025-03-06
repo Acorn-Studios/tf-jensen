@@ -1,15 +1,25 @@
+# Data stuff
+import os
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import datascrape
+
+# I love Sklearn!
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
-import tensorflow as tf
-from tensorflow.keras import layers, models, Sequential
-from tensorflow.keras.layers import LSTM, Dense, Input, RepeatVector, TimeDistributed
-from tensorflow.keras.callbacks import ReduceLROnPlateau
-import matplotlib.pyplot as plt
 
-import datascrape
-import os
+# PlaidML
+import plaidml.keras
+try:
+	plaidml.keras.install_backend()
+except:
+	# Backup
+	os.environ['KERAS_BACKEND'] = "plaidml.keras.backend"
+
+from keras import layers, models, Sequential
+from keras.layers import LSTM, Dense, Input, RepeatVector, TimeDistributed
+from keras.callbacks import ReduceLROnPlateau
 
 # MODEL PARAMS #
 bsize_scale = 2 # The higher this is, the faster training will be, but the model will generalize less
@@ -70,15 +80,14 @@ print("X_test shape:", X_test.shape)  # Should be (num_samples, 1, 4)
 # Build the autoencoder. 
 # Here, we want our model to look at past veiwangles to determine a cheater, so we do that here.
 def build_lstm_autoencoder(input_shape, size=1):
-    model = Sequential()
-    model.add(Input(shape=(input_shape[1], input_shape[2])))
-    model.add(LSTM(128*size, activation='relu', return_sequences=True))
-    model.add(LSTM(64*size, activation='relu', return_sequences=False))
-    model.add(RepeatVector(input_shape[1]))
-    model.add(LSTM(64*size, activation='relu', return_sequences=True))
-    model.add(LSTM(128*size, activation='relu', return_sequences=True))
-    model.add(TimeDistributed(Dense(input_shape[2], activation='tanh')))
-    return model
+	model = Sequential()
+	model.add(LSTM(128 * size, activation='relu', return_sequences=True, input_shape=(input_shape[1], input_shape[2])))
+	model.add(LSTM(64 * size, activation='relu', return_sequences=False))
+	model.add(RepeatVector(input_shape[1]))
+	model.add(LSTM(64 * size, activation='relu', return_sequences=True))
+	model.add(LSTM(128 * size, activation='relu', return_sequences=True))
+	model.add(TimeDistributed(Dense(input_shape[2], activation='tanh')))
+	return model
 
 input_shape = X_train.shape
 lstm_autoencoder = build_lstm_autoencoder(input_shape, size=size)
