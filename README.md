@@ -52,7 +52,7 @@ Jensen is an AI-powered tool designed to analyze Team Fortress 2 (TF2) demo file
 
 1. **Clone the repository**:
     ```sh
-    git clone https://github.com/yourusername/tf-jensen.git
+    git clone https://github.com/Acorn-Studios/tf-jensen
     cd tf-jensen
     ```
 
