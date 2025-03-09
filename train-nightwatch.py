@@ -9,13 +9,8 @@ import datascrape
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-# PlaidML
-import plaidml.keras
-try:
-	plaidml.keras.install_backend()
-except:
-	# Backup
-	os.environ['KERAS_BACKEND'] = "plaidml.keras.backend"
+import advplaidml
+advplaidml.setup_plaidml()
 
 from keras import layers, models, Sequential
 from keras.layers import LSTM, Dense, Input, RepeatVector, TimeDistributed
@@ -24,6 +19,7 @@ from keras.callbacks import ReduceLROnPlateau
 # MODEL PARAMS #
 bsize_scale = 2 # The higher this is, the faster training will be, but the model will generalize less
 size = 8 # Size of the model. Size increases model performance, but also increases training time
+epochs = 3 # Number of epochs to train the model
 
 lr_rate = 0.001 # Learning rate for the model. Do not adjust unless you know what you're doing
 
@@ -97,7 +93,7 @@ lstm_autoencoder.compile(optimizer='adam', loss='mse', metrics=['accuracy'])
 # Train the Autoencoder
 history = lstm_autoencoder.fit(
 	X_train, X_train, 
-	epochs=8, 
+	epochs=epochs, 
 	batch_size=128*bsize_scale, 
 	validation_data=(X_test, X_test), 
 	callbacks=[ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=5, min_lr=lr_rate)],
@@ -105,7 +101,7 @@ history = lstm_autoencoder.fit(
 )
 
 # Save the model
-lstm_autoencoder.save(f'jensen-nightwatch-v2-s{size}-lstm.keras')
+lstm_autoencoder.save(f'jensen-nightwatch-v2-s{size}-lstm.h5')
 
 show_summary = False
 if show_summary:
