@@ -9,8 +9,8 @@ import datascrape
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
-import advplaidml
-advplaidml.setup_plaidml()
+import plaidml.keras
+plaidml.keras.install_backend()
 
 from keras import layers, models, Sequential
 from keras.layers import LSTM, Dense, Input, RepeatVector, TimeDistributed
@@ -100,8 +100,11 @@ history = lstm_autoencoder.fit(
     verbose=1
 )
 
-# Save the model
+# Save the model in .h5 format
 lstm_autoencoder.save(f'jensen-nightwatch-v2-s{size}-lstm.h5')
+
+# Save the model in TensorFlow SavedModel format
+lstm_autoencoder.save(f'jensen-nightwatch-v2-s{size}-lstm')
 
 show_summary = False
 if show_summary:
