@@ -2,6 +2,8 @@ use std::collections::HashMap;
 use std::fs::{self, File};
 use std::io::Write;
 
+use uuid::Uuid;
+
 use anyhow::Error;
 use tf_demo_parser::ParserState;
 use crate::base::cheat_analyser_base::{CheatAnalyserState, PlayerState};
@@ -85,7 +87,7 @@ impl<'a> CheatAlgorithm<'a> for ViewAnglesToCSV {
     }
 
     fn init(&mut self) -> Result<(), Error> {
-        self.init_file("./test/viewangles_to_csv.csv");
+        self.init_file(format!("test/{}.csv", uuid::Uuid::new_v4()).as_str());
         writeln!(self.file.as_mut().unwrap(), "tick,name,steam_id,origin_x,origin_y,origin_z,viewangle,pitchangle,va_delta,pa_delta").unwrap();
         Ok(())
     }

@@ -17,29 +17,9 @@ def clear_folder(folder: str) -> None:
         except Exception as e:
             warnings.warn(f"[datascrape -> clear_folder()] Could not remove {file}: {e}")
 
-# Filter the CSV by name
-def filter_by_name(data: str, name: str) -> list:
-    with open(data, 'r', encoding='utf-8') as file:
-        reader = csv.DictReader(file)
-        return [row for row in reader if row.get('name') == name]
-
-# Filter the CSV by ticks
-def filter_by_ticks(data: str, start_t: int, end_t: int) -> list:
-    with open(data, 'r', encoding='utf-8') as file:
-        reader = csv.DictReader(file)
-        return [row for row in reader if start_t <= int(row.get('tick', 0)) <= end_t]
-
 # Compile a demo into a CSV
 def comp_into_csv(demoname: str) -> None:
     os.system(f'cd data_collector && cargo run --release -- -i "../demos/{demoname}" -a viewangles_to_csv')
-
-# Compile all CSVs in the 'demos' folder into CSVs
-def comp_all_csv() -> bool:
-    demos = os.listdir('demos')
-    for demo in demos:
-        print(f"Compiling {demo} into CSV")
-        comp_into_csv(demo)
-    return True
 
 # Filter the CSV by one player
 def filter_by_one_player(data: str) -> None:
@@ -61,7 +41,7 @@ def concatenate_csvs(data_folder: str, name='data.csv') -> None:
         writer = csv.writer(file)
         writer.writerow(['tick', 'name', 'steam_id', 'origin_x', 'origin_y', 'origin_z', 'viewangle', 'pitchangle', 'va_delta', 'pa_delta'])
         for csv_file in csvs:
-            with open(csv_file, 'r', encoding='utf-8') as f:
+            with open(data_folder + "/" + csv_file, 'r', encoding='utf-8') as f:
                 reader = csv.reader(f)
                 next(reader)  # Skip header
                 for row in reader:
@@ -69,28 +49,3 @@ def concatenate_csvs(data_folder: str, name='data.csv') -> None:
                     if tick_name_pair not in seen_ticks:
                         seen_ticks.add(tick_name_pair)
                         writer.writerow(row)
-
-global header_written
-header_written = False
-# Extract all the different players into separate csvs. Allows for extraction of up to 12x more data than traditional
-def extract_all_players(data: str, path: str, concatenate_by_default=False) -> None:
-    with open(data, 'r', encoding='utf-8') as file:
-        reader = csv.DictReader(file)
-        players = set(row.get('name') for row in reader)
-        global header_written
-        for player in players:
-            rows = filter_by_name(data, player)
-            # Write to singular csvs if concatenate_by_default is False. Else write into one singular csv
-            if concatenate_by_default:
-                print(f"Writing {player} to data.csv")
-                with open('data.csv', 'a', newline='', encoding='utf-8') as f:
-                    writer = csv.DictWriter(f, fieldnames=reader.fieldnames)
-                    if not header_written:
-                        writer.writeheader()
-                        header_written = True
-                    writer.writerows(rows)
-            else:
-                print(f"Writing {player} to {path}")
-                with open(f'{path}{uuid.uuid4()}.csv', 'a', newline='', encoding='utf-8') as f:
-                    writer = csv.DictWriter(f, fieldnames=reader.fieldnames)
-                    writer.writeheader()

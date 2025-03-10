@@ -6,6 +6,8 @@ data.csv
 *.h5
 *.keras
 *.dem
+*.json
+*.pkl
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
