@@ -22,15 +22,29 @@ from keras.callbacks import ReduceLROnPlateau
 bsize_scale = 2
 size = 8
 epochs = 3
-lr_rate = 0.001 # Don't adjust if you don't know what you're doing
+window_size = 33  # Number of past time steps to include in each sequence. Essentially memory.
+overlap_seqs = False # Will result in slower training but better short-term predictions
+
+# Notes:
+# Setting window_size to 66 and overlap_seqs = True is like mixing bleach with ammonia
+# If you have window_size set high, make sure you have enough memory. PlaidML will tell you if you don't have enough.
+# If the model reaches 100% accuracy after ~3 epochs or 95% after 1 epoch, it's likely overfitting. Try reducing the size of the model.
+# If the model is not learning well, try increasing the size of the model.
+# bsize_scale is a multiplier for the batch size. If you run out of memory, try reducing this value. If you run into model undergeneralization, try increasing this value.
+
+# Danger zone! Do not edit these if you don't know what you're doing
+stride = 1
+lr_rate = 0.001
+
+if not overlap_seqs: stride = window_size
 
 # Data Preparation
 if not os.path.exists('data.csv'):
-    datascrape.clear_folder('data_collector/test')
-    print("Compiling all demos into CSV")
-    for demo in os.listdir('demos'):
-        datascrape.comp_into_csv(demo)
-    datascrape.concatenate_csvs('data_collector/test', 'data.csv')
+	datascrape.clear_folder('data_collector/test')
+	print("Compiling all demos into CSV")
+	for demo in os.listdir('demos'):
+		datascrape.comp_into_csv(demo)
+	datascrape.concatenate_csvs('data_collector/test', 'data.csv')
 
 # Load dataset
 df = pd.read_csv('data.csv', encoding='utf-8', dtype=str)
@@ -50,18 +64,27 @@ scaler = StandardScaler()
 df[features] = scaler.fit_transform(df[features])
 joblib.dump(scaler, 'scaler.pkl')  # Save the scaler for inference
 
-# Reshape for LSTM
-X = df[features].values.reshape((df.shape[0], 1, len(features)))
+# Function to create sliding window sequences
+def create_sequences(data, window_size, stride=1):
+	"""
+	Converts raw data into overlapping sequences of shape (num_chunks, window_size, num_features).
+	"""
+	num_chunks = (data.shape[0] - window_size) // stride + 1
+	sequences = np.array([data[i*stride:i*stride+window_size] for i in range(num_chunks)])
+	return sequences
+
+# Convert data into sequences
+X = create_sequences(df[features].values, window_size=window_size, stride=stride)
 
 # Train-Test Split (90% Train, 10% Test)
-X_train, X_test = train_test_split(X, test_size=0.1, random_state=42)
+X_train, X_test = train_test_split(X, test_size=0.1, shuffle=False)
 
 # Model Definition
 def build_lstm_autoencoder(input_shape, size=1):
 	model = Sequential([
 		LSTM(128 * size, activation='relu', return_sequences=True, input_shape=input_shape[1:]),
 		LSTM(64 * size, activation='relu', return_sequences=False),
-		RepeatVector(input_shape[1]),
+		RepeatVector(input_shape[1]),  # Ensures the decoder gets the same time dimension
 		LSTM(64 * size, activation='relu', return_sequences=True),
 		LSTM(128 * size, activation='relu', return_sequences=True),
 		TimeDistributed(Dense(input_shape[2], activation='tanh'))
@@ -85,7 +108,7 @@ history = autoencoder.fit(
 )
 
 # Save Model
-autoencoder.save(f'jensen-nightwatch-v2-s{size}-lstm.h5')
+autoencoder.save(f'jensen-nightwatch-v2-s{size}-memory.h5')
 
 # Optional Visualization
 show_summary = False
