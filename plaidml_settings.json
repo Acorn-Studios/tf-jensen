@@ -1,6 +1,0 @@
-{
-    "PLAIDML_DEVICE_IDS":[
-        "opencl_amd_gfx1034.0"
-    ],
-    "PLAIDML_EXPERIMENTAL":true
-}
