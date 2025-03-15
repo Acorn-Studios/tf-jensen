@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
 # Keras & PlaidML
+from advplaidml import AttentionLayer as Attention
 import advplaidml
 advplaidml.setup_plaidml()
 
@@ -33,7 +34,7 @@ overlap_seqs = False # Will result in slower training but better short-term pred
 
 # Danger zone! Do not edit these if you don't know what you're doing
 stride = 1
-lr_rate = 0.001 * max(1,round(4/8))
+lr_rate = 0.001 * min(1,round(4/epochs))
 
 if not overlap_seqs: stride = window_size
 
@@ -83,9 +84,11 @@ def build_lstm_autoencoder(input_shape, size=1):
 	model = Sequential([
 		LSTM(256 * size, activation='tanh', return_sequences=True, input_shape=input_shape[1:]),
 		LSTM(128 * size, activation='tanh', return_sequences=True),
+		Attention(dropout=0.1),
 		LSTM(64 * size, activation='tanh', return_sequences=False),
 		RepeatVector(input_shape[1]),  # Ensures the decoder gets the same time dimension
 		LSTM(64 * size, activation='tanh', return_sequences=True),
+		Attention(dropout=0.1),
 		LSTM(128 * size, activation='tanh', return_sequences=True),
 		LSTM(256 * size, activation='tanh', return_sequences=True),
 		TimeDistributed(Dense(input_shape[2], activation='tanh'))

@@ -4,6 +4,12 @@ import plaidml
 import plaidml.tile
 import plaidml.settings
 
+os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
+
+from keras.layers import Layer
+import keras.backend as K
+
+
 def setup_plaidml():
 	"""Automatically configures PlaidML for optimal performance."""
 	
@@ -44,8 +50,32 @@ def setup_plaidml():
 	print(f" - Workgroup Size: 64")
 	print(f" - Memory Growth Enabled")
 
-	# Setup keras plaidml backend
-	os.environ["KERAS_BACKEND"] = "plaidml.keras.backend"
+# Custom Attention Layer
 
-# Automatically run setup when imported
-setup_plaidml()
+class AttentionLayer(Layer):
+    def __init__(self, dropout=0.0, **kwargs):
+        self.dropout = dropout
+        super(AttentionLayer, self).__init__(**kwargs)
+
+    def build(self, input_shape):
+        self.W = self.add_weight(name='attention_weight',
+                                 shape=(input_shape[-1], input_shape[-1]),
+                                 initializer='glorot_uniform',
+                                 trainable=True)
+        self.b = self.add_weight(name='attention_bias',
+                                 shape=(input_shape[-1],),
+                                 initializer='zeros',
+                                 trainable=True)
+        super(AttentionLayer, self).build(input_shape)
+
+    def call(self, x):
+        # Compute the attention scores
+        e = K.tanh(K.dot(x, self.W) + self.b)
+        # Apply softmax to get attention weights
+        a = K.softmax(e)
+        # Multiply input by attention weights
+        output = x * a
+        return output
+
+    def compute_output_shape(self, input_shape):
+        return input_shape
