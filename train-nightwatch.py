@@ -19,22 +19,23 @@ from keras.layers import LSTM, Dense, RepeatVector, TimeDistributed
 from keras.callbacks import ReduceLROnPlateau
 
 # Model Parameters
-bsize_scale = 2
-size = 8
-epochs = 3
+bsize_scale = 2 # Multiplier for the batch size. If you run out of memory, try reducing this value. If you run into model undergeneralization, try increasing this value.
+size = 8 # The size of the model. Larger models will have more parameters and will take longer to train. Be careful of overfitting.
+epochs = 3 # The amount of times the model will see the data. More epochs = more learning. Be careful of overfitting.
+epoch_scale = 8 # Automatically increase epochs while reducing lr_rate. Helpful for larger models. Should be in multiples of 4.
 window_size = 33  # Number of past time steps to include in each sequence. Essentially memory.
-overlap_seqs = False # Will result in slower training but better short-term predictions
+overlap_seqs = False # Will result in slower training but better short-term predictions. Can be very heavy on memory, especially with large window sizes.
 
 # Notes:
 # Setting window_size to 66 and overlap_seqs = True is like mixing bleach with ammonia
 # If you have window_size set high, make sure you have enough memory. PlaidML will tell you if you don't have enough.
 # If the model reaches 100% accuracy after ~3 epochs or 95% after 1 epoch, it's likely overfitting. Try reducing the size of the model.
 # If the model is not learning well, try increasing the size of the model.
-# bsize_scale is a multiplier for the batch size. If you run out of memory, try reducing this value. If you run into model undergeneralization, try increasing this value.
 
 # Danger zone! Do not edit these if you don't know what you're doing
 stride = 1
-lr_rate = 0.001
+lr_rate = 0.001 * 4/epoch_scale
+epoch = epochs * epoch_scale/4
 
 if not overlap_seqs: stride = window_size
 
@@ -82,11 +83,13 @@ X_train, X_test = train_test_split(X, test_size=0.1, shuffle=False)
 # Model Definition
 def build_lstm_autoencoder(input_shape, size=1):
 	model = Sequential([
-		LSTM(128 * size, activation='relu', return_sequences=True, input_shape=input_shape[1:]),
-		LSTM(64 * size, activation='relu', return_sequences=False),
+		LSTM(256 * size, activation='tanh', return_sequences=True, input_shape=input_shape[1:]),
+		LSTM(128 * size, activation='tanh', return_sequences=True),
+		LSTM(64 * size, activation='tanh', return_sequences=False),
 		RepeatVector(input_shape[1]),  # Ensures the decoder gets the same time dimension
-		LSTM(64 * size, activation='relu', return_sequences=True),
-		LSTM(128 * size, activation='relu', return_sequences=True),
+		LSTM(64 * size, activation='tanh', return_sequences=True),
+		LSTM(128 * size, activation='tanh', return_sequences=True),
+		LSTM(256 * size, activation='tanh', return_sequences=True),
 		TimeDistributed(Dense(input_shape[2], activation='tanh'))
 	])
 	return model
