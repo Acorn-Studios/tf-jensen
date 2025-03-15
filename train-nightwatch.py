@@ -21,8 +21,7 @@ from keras.callbacks import ReduceLROnPlateau
 # Model Parameters
 bsize_scale = 2 # Multiplier for the batch size. If you run out of memory, try reducing this value. If you run into model undergeneralization, try increasing this value.
 size = 8 # The size of the model. Larger models will have more parameters and will take longer to train. Be careful of overfitting.
-epochs = 3 # The amount of times the model will see the data. More epochs = more learning. Be careful of overfitting.
-epoch_scale = 8 # Automatically increase epochs while reducing lr_rate. Helpful for larger models. Should be in multiples of 4.
+epochs = 8 # The amount of times the model will see the data. More epochs = more learning. Be careful of overfitting.
 window_size = 33  # Number of past time steps to include in each sequence. Essentially memory.
 overlap_seqs = False # Will result in slower training but better short-term predictions. Can be very heavy on memory, especially with large window sizes.
 
@@ -34,8 +33,7 @@ overlap_seqs = False # Will result in slower training but better short-term pred
 
 # Danger zone! Do not edit these if you don't know what you're doing
 stride = 1
-lr_rate = 0.001 * 4/epoch_scale
-epoch = epochs * epoch_scale/4
+lr_rate = 0.001 * max(1,round(4/8))
 
 if not overlap_seqs: stride = window_size
 
