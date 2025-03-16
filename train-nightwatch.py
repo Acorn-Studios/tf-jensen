@@ -84,12 +84,12 @@ def build_lstm_autoencoder(input_shape, size=1):
 	model = Sequential([
 		LSTM(256 * size, activation='tanh', return_sequences=True, input_shape=input_shape[1:]),
 		LSTM(128 * size, activation='tanh', return_sequences=True),
-		Attention(dropout=0.1),
+		Attention(),
 		LSTM(64 * size, activation='tanh', return_sequences=False),
 		RepeatVector(input_shape[1]),  # Ensures the decoder gets the same time dimension
 		LSTM(64 * size, activation='tanh', return_sequences=True),
-		Attention(dropout=0.1),
 		LSTM(128 * size, activation='tanh', return_sequences=True),
+		Attention(),
 		LSTM(256 * size, activation='tanh', return_sequences=True),
 		TimeDistributed(Dense(input_shape[2], activation='tanh'))
 	])

@@ -53,27 +53,21 @@ def setup_plaidml():
 # Custom Attention Layer
 
 class AttentionLayer(Layer):
-    def __init__(self, dropout=0.0, **kwargs):
-        self.dropout = dropout
+    def __init__(self, **kwargs):
         super(AttentionLayer, self).__init__(**kwargs)
 
     def build(self, input_shape):
-        self.W = self.add_weight(name='attention_weight',
-                                 shape=(input_shape[-1], input_shape[-1]),
-                                 initializer='glorot_uniform',
-                                 trainable=True)
-        self.b = self.add_weight(name='attention_bias',
-                                 shape=(input_shape[-1],),
-                                 initializer='zeros',
-                                 trainable=True)
+        self.attention_weights = self.add_weight(name='attention_weights',
+                                                 shape=(input_shape[-1], 1),
+                                                 initializer='glorot_uniform',
+                                                 trainable=True)
         super(AttentionLayer, self).build(input_shape)
 
     def call(self, x):
-        # Compute the attention scores
-        e = K.tanh(K.dot(x, self.W) + self.b)
-        # Apply softmax to get attention weights
+        e = K.dot(x, self.attention_weights)
+        e = K.squeeze(e, axis=-1)
         a = K.softmax(e)
-        # Multiply input by attention weights
+        a = K.expand_dims(a, axis=-1)
         output = x * a
         return output
 
